@@ -1,0 +1,33 @@
+package com.bma.linking.rules
+
+import com.bma.linking.facts.*;
+import com.bma.linking.domain.*;
+//
+//rule "Testing Comments"
+//when
+//    // this is a single line comment
+//    eval( true ) // this is a comment in the same line of a pattern
+//then
+//   System.out.println("Testing Comments Rule");
+//end
+
+rule "Exchange Instruction Linking"
+when
+    bt : LinkingItemFact(
+        source == LinkingItemSource.BANK_TRANSACTION, isNew(),
+        $btAmount: amount, $btCurrency : currency, $btReference : reference
+    )
+    ei : LinkingItemFact(
+        source == LinkingItemSource.EXCHANGE_INSTRUCTION, isNew(),
+        amount == -$btAmount, currency == $btCurrency, reference == $btReference
+    )
+then
+//    System.out.println("Exchange Instruction Linking Rule");
+//    System.out.println("Matched " + bt + " and " + ei);
+
+    ei.markAsLinked();
+    bt.markAsLinked();
+
+    insert(new BankTransactionLinkFact(bt, ei));
+
+end
